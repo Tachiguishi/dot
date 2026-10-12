@@ -1,7 +1,7 @@
 
 set -euo pipefail
 
-current_dir=$(dirname "$0")
+current_dir="$(cd "$(dirname "$0")" && pwd)"
 
 proxy() {
   if [ "$1" = "proxy" ]; then
@@ -75,6 +75,7 @@ install_oh_my_zsh() {
     echo "Removing existing .zshrc"
     rm "$HOME/.zshrc"
   fi
+  touch "$HOME/.zshrc_custom"
   ln -s "$current_dir/zshrc" "$HOME/.zshrc"
 }
 
@@ -121,11 +122,16 @@ install_tmux() {
   ln -s "$current_dir/tmux.conf" "$HOME/.tmux.conf"
 
   # soft link tmux-powerline
-  if [ -d "$HOME/.config/.tmux-powerline" ]; then
-    echo "Removing existing .tmux-powerline"
-    rm -rf "$HOME/.config/.tmux-powerline"
+  if [ -d "$HOME/.config/tmux-powerline" ]; then
+    echo "Removing existing tmux-powerline"
+    rm -rf "$HOME/.config/tmux-powerline"
   fi
-  ln -s "$current_dir/tmux-powerline" "$HOME/.config/.tmux-powerline"
+  # check if .config directory exists
+  if [ ! -d "$HOME/.config" ]; then
+    echo "Creating .config directory"
+    mkdir "$HOME/.config"
+  fi
+  ln -s "$current_dir/tmux-powerline" "$HOME/.config/tmux-powerline"
 }
 
 install_tmux_plugins() {
@@ -139,6 +145,7 @@ install_tmux_plugins() {
   # check if tmux is running
   if [ -n "$TMUX" ]; then
     echo "Installing tmux plugins..."
+    tmux source ~/.tmux.conf
     ~/.tmux/plugins/tpm/bin/install_plugins
   else
     echo "tmux is not running. Please start tmux and run the following command to install plugins:"
